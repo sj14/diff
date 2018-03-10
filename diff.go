@@ -71,7 +71,7 @@ func getContent(fileName string) ([]string, error) {
 	var content []string
 	file, err := os.Open(fileName)
 	if err != nil {
-		return []string{""}, err
+		return []string{}, err
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
@@ -79,7 +79,6 @@ func getContent(fileName string) ([]string, error) {
 
 	for scanner.Scan() {
 		content = append(content, scanner.Text())
-
 	}
 	return content, nil
 }

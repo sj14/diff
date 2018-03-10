@@ -4,6 +4,12 @@ Go package to get differences of two files
 # bench  
     BenchmarkCompare-8        100000             18906 ns/op
     ok      github.com/sj14/diff    2.094s
+    
+On the used hardware it takes about 2 sec. to compare two files with about 500 bytes 100,000 times.
+In 100 ms it would process 500 bytes 500 times or 250000 bytes (250 kb) in a single run (pretending it would scale almost linear).
+The calculation highly depends on how similar the files are, because the comparison of each line is run from the last position which is remembered as a matching line of both files, 
+and has to compare all lines from this position to a match or the end of the file. When the files are completely different, it will always range over the whole second file.
+
 
 # memory profile
     File: diff.test
