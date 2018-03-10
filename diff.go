@@ -27,89 +27,45 @@ func (d LineDiff) String() string {
 // Differences (added or removed line) are based on the left file.
 func Compare(leftFile, rightFile string) []LineDiff {
 	var diffs []LineDiff
-	endLeft, endRight := false, false
-	contNumRight := 0
 
-	for numLeft := 0; ; numLeft++ {
-		contentLeft, err := getLine(numLeft, leftFile)
-		if err != nil {
-			if err == errEndOfFile {
-				endLeft = true
-			} else {
-				log.Fatal(err)
-			}
-			if endLeft == true && endRight == true {
-				// Finished scanning both files
+	contentLeft, err := getContent(leftFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	contentRight, err := getContent(rightFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	continueNumRight := 0
+
+	for il := 0; il < len(contentLeft); il++ {
+		found := false
+		for ir := continueNumRight; ir < len(contentRight); ir++ {
+			if contentLeft[il] == contentRight[ir] {
+				found = true
+				// output lines on right side which were in between last matching and currently matching line
+				for k := continueNumRight; k < ir; k++ {
+					diffs = append(diffs, LineDiff{line: k + 1, added: true, content: contentRight[k]})
+				}
+				continueNumRight = ir + 1
 				break
 			}
 		}
-
-		for numRight := contNumRight; ; numRight++ {
-			contentRight, err := getLine(numRight, rightFile)
-			if err != nil {
-				if err != errEndOfFile {
-					log.Fatal(err)
-				}
-
-				if endLeft == false {
-					// scanned whole right side,
-					// left line not existing anymore
-					diffs = append(diffs, LineDiff{line: numLeft + 1, added: false, content: contentLeft})
-					break
-				}
-
-				// finished left side
-				// get remaining lines at end of right side
-				endRight = true
-				for addLineRight := contNumRight; addLineRight < numRight; addLineRight++ {
-					newLine, err := getLine(addLineRight, rightFile)
-					if err != nil && err != errEndOfFile {
-						log.Fatal(err)
-					}
-					diffs = append(diffs, LineDiff{line: addLineRight + 1, added: true, content: newLine})
-				}
-				// break here, otherwise infinite loop
-				break
-			}
-
-			// found the corresponding matching line on right side
-			if contentLeft == contentRight {
-				// get newly added lines on right side in between the matched lines
-				for addLineRight := contNumRight; addLineRight < numRight; addLineRight++ {
-					newLine, err := getLine(addLineRight, rightFile)
-					if err != nil && err != errEndOfFile {
-						log.Fatal(err)
-					}
-					diffs = append(diffs, LineDiff{line: addLineRight + 1, added: true, content: newLine})
-				}
-				contNumRight = numRight + 1
-				break
-			}
+		if !found {
+			// same content not found on right side
+			diffs = append(diffs, LineDiff{line: il + 1, added: false, content: contentLeft[il]})
 		}
+	}
+	// add remaining new lines at the end of right side
+	for k := continueNumRight; k < len(contentRight); k++ {
+		diffs = append(diffs, LineDiff{line: k + 1, added: true, content: contentRight[k]})
 	}
 	return diffs
 }
 
 var errEndOfFile = errors.New("reached end of file")
-
-func getLine(line int, fileName string) (string, error) {
-	file, err := os.Open(fileName)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-
-	curLine := 0
-	for scanner.Scan() {
-		if curLine == line {
-			return scanner.Text(), nil
-		}
-		curLine++
-	}
-	return "", errEndOfFile
-}
 
 func getContent(fileName string) ([]string, error) {
 	var content []string
