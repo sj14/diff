@@ -65,7 +65,7 @@ func Compare(leftFile, rightFile string) []LineDiff {
 	return diffs
 }
 
-var errEndOfFile = errors.New("reached end of file")
+var ErrEndOfFile = errors.New("reached end of file")
 
 func getContent(fileName string) ([]string, error) {
 	var content []string

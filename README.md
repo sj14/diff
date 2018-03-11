@@ -1,6 +1,16 @@
 # diff
 Go package to get differences of two files
 
+__example__
+
+    7        -               <consumerKey>CLIENTID</consumerKey>
+    7        +               <consumerKey>OTHER</consumerKey>
+    8        +               <scopes>Full</scopes>
+    9        -               <scopes>Api</scopes>
+    10       -               <scopes>Web</scopes>
+    11       -               <scopes>Full</scopes>
+
+
 # bench  
     BenchmarkCompare-8        100000             18906 ns/op
     ok      github.com/sj14/diff    2.094s
